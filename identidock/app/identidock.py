@@ -1,9 +1,33 @@
-from flask import Flask
-app = Flask (__name__)
+from flask import Flask, Response
+import requests
+app = Flask(__name__)
+salt = "UNIQUE_SALT"
+default_name = 'Carlos Moyano'
 
 @app.route('/')
-def hello_world():
-    return 'Hello world from ciberseguridad\n'
+def mainpage():
+	name = default_name
+	header = '<html><head><title>Identidock</title></head><body>'
+	body = '''<form method="POST">
+			Hola <input type="text" name="name" value="{0}">
+			<input type="submit" value="submit">
+			</form>
+			<p>Te pareces a:
+			<img src="/monster/{1}"/>
+			'''.format(name)
+	footer = '</body></html>'
+	
+	return header + body + footer
 
-if __name__== '__main__':
-    app.run(debug=True, host='0.0.0.0')
+@app.route('/monster/<name>')
+def get_identicon(name):
+	image = cache.get(name)
+	if image is None:
+		print ("Cache miss", flush=True)
+		r = requests.get('https://api.multiavatar.com/' + name + '?size=80')
+		image = r.content
+        cache.set(name, image)
+	return Response(image, mimetype='image/svg+xml')
+	
+if __name__ == '__main__':
+	app.run(debug=True, host='0.0.0.0')
